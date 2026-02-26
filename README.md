@@ -35,24 +35,23 @@ Furthermore, the project encompasses a complete ASIC design flow using Cadence t
 
 2. 핵심 엔지니어링 역량 (Troubleshooting)
 ① 시뮬레이션과 실제 하드웨어(Synthesis)의 동작 불일치 원인 규명
-현상: 기능 시뮬레이션에서는 정상 동작하던 FSM이 실제 FPGA 하드웨어(ILA 관찰)에서는 조건이 충족되지 않은 상태에서 다음 State로 넘어가는 현상 발생.
-원인 분석: always @(*) 구문 내 불완전한 조건문(missing else)으로 인해 합성 툴이 의도치 않은 '래치(Latch)'를 생성함. 시뮬레이터는 Zero-time delay로 동작하여 문제를 숨겼으나, 실제 물리 회로에서는 래치로 인한 전파 지연(Propagation delay)과 글리치(Glitch)가 발생해 Race Condition을 유발함.
+* 현상: 기능 시뮬레이션에서는 정상 동작하던 FSM이 실제 FPGA 하드웨어(ILA 관찰)에서는 조건이 충족되지 않은 상태에서 다음 State로 넘어가는 현상 발생.
+* 원인 분석: always @(*) 구문 내 불완전한 조건문(missing else)으로 인해 합성 툴이 의도치 않은 '래치(Latch)'를 생성함. 시뮬레이터는 Zero-time delay로 동작하여 문제를 숨겼으나, 실제 물리 회로에서는 래치로 인한 전파 지연(Propagation delay)과 글리치(Glitch)가 발생해 Race Condition을 유발함.
+* 해결: 조합 논리(Combinational logic)의 모든 분기에 명확한 상태 지시(else 구문)를 추가하여 래치 생성을 원천 차단하고 안정적인 FSM 구축.
 
-해결: 조합 논리(Combinational logic)의 모든 분기에 명확한 상태 지시(else 구문)를 추가하여 래치 생성을 원천 차단하고 안정적인 FSM 구축.
 ② 레지스터 덮어쓰기(Overwrite) 설계 결함 수정
-현상: PWM 듀티 사이클 증감 명령(0x83, 0x84)을 수신해도 모터 속도가 변하지 않음.
-
-원인 및 해결: 단일 Clock Cycle 내에서 동일한 레지스터(duty_cycle)에 대해 다중 Non-blocking 할당이 중첩되어 마지막 값이 덮어씌워지는 구조적 결함 파악. 할당 우선순위 구조를 단일화하여 1 Clock 당 1회의 업데이트만 발생하도록 RTL 아키텍처 재설계.
+* 현상: PWM 듀티 사이클 증감 명령(0x83, 0x84)을 수신해도 모터 속도가 변하지 않음.
+* 원인 및 해결: 단일 Clock Cycle 내에서 동일한 레지스터(duty_cycle)에 대해 다중 Non-blocking 할당이 중첩되어 마지막 값이 덮어씌워지는 구조적 결함 파악. 할당 우선순위 구조를 단일화하여 1 Clock 당 1회의 업데이트만 발생하도록 RTL 아키텍처 재설계.
 
 3. ASIC Flow 및 타이밍 검증 (Timing Closure)
-Synthesis (Genus): 설계 제약 조건(SDC)을 바탕으로 Gate-level Netlist 추출 및 Pre-layout STA 진행.
+* Synthesis (Genus): 설계 제약 조건(SDC)을 바탕으로 Gate-level Netlist 추출 및 Pre-layout STA 진행.
 
-Place & Route (Innovus): Floorplanning, Power Plan(Ring/Stripe), CTS(Clock Tree Synthesis), Routing 수행.
+* Place & Route (Innovus): Floorplanning, Power Plan(Ring/Stripe), CTS(Clock Tree Synthesis), Routing 수행.
 
-Sign-off 검증: Parasitic RC 값이 반영된 SDF를 생성하여 Post-layout Gate-Level Simulation(GLS)을 수행, 실제 배선 지연이 포함된 상태에서의 타이밍 제약(Setup/Hold)을 최종 검증함.
+* Sign-off 검증: Parasitic RC 값이 반영된 SDF를 생성하여 Post-layout Gate-Level Simulation(GLS)을 수행, 실제 배선 지연이 포함된 상태에서의 타이밍 제약(Setup/Hold)을 최종 검증함.
 
 4. 향후 아키텍처 고도화 (Scalability)
 단독 제어(Standalone) 구조를 확장하여, 개발한 모듈을 AMBA AXI4-Lite Slave IP로 패키징. Zynq PS(ARM 코어)의 Memory-mapped 제어를 받는 완벽한 SoC 통합 시스템으로 업그레이드 예정.
 
-Board: ARM-Nucleo-F429ZI-board (STM32F429ZI)
+* Board: ARM-Nucleo-F429ZI-board (STM32F429ZI)
 
