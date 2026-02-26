@@ -27,7 +27,7 @@ Furthermore, the project encompasses a complete ASIC design flow using Cadence t
 
 -------
 
-[프로젝트명] Custom UART & DC Motor 제어 시스템 및 ASIC 설계 파이프라인 구축
+#[프로젝트명] Custom UART & DC Motor 제어 시스템 및 ASIC 설계 파이프라인 구축
 
 1. 프로젝트 개요
 개발 환경: Verilog HDL, Xilinx Vivado, Cadence (Genus, Innovus, Xcelium)
