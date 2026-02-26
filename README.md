@@ -35,6 +35,9 @@ Furthermore, the project encompasses a complete ASIC design flow using Cadence t
 ## 4. Future Architecture Upgrade
 * **AMBA AXI4-Lite Integration:** Transitioning from a standalone MCU-FPGA interface to an SoC architecture. The UART and Motor controller modules will be packaged as AXI4-Lite slave peripherals, allowing direct memory-mapped control from the Zynq Processing System (ARM Cortex-A9).
 
+## 5. Result
+* **youtube link:** 🔗https://youtube.com/shorts/WTCJQ0E2--E?feature=share
+
 -------
 
 [프로젝트] Custom UART & DC Motor 제어 시스템 및 ASIC 설계 파이프라인 구축
@@ -45,14 +48,17 @@ Furthermore, the project encompasses a complete ASIC design flow using Cadence t
 핵심 내용: ARM Cortex-M(STM32)과 FPGA를 결합한 이종 시스템(Heterogeneous System) 통합 설계. STM32에서 전송한 무선 제어 명령을 수신하기 위해 FPGA(PL) 내부에 UART IP를 직접 설계하고, 이를 기반으로 DC 모터의 방향 및 PWM 속도를 제어하는 하드웨어 가속기를 구현함. 순수 RTL 설계를 넘어 ASIC Physical Design (합성, P&R, Post-GLS)까지 Full-flow 검증 완료.
 
 2. 핵심 엔지니어링 역량 (Troubleshooting)
+
 ① 이종 플랫폼 간 비동기 통신 시 발생하는 Metastability 해결
-현상: 기능 시뮬레이션에서는 완벽히 동작하던 코드가 실제 ARM 보드와 블루투스로 통신할 때 간헐적인 오작동(모터 제어 튐 현상) 발생.
-원인 및 해결: STM32와 FPGA가 서로 다른 독립적인 클럭 도메인을 사용함에 따라, 외부에서 비동기적으로 인가되는 UART 수신 신호가 FPGA 내부 플립플롭의 Setup/Hold 타임을 위반하여 Metastability(메타스테이블) 상태를 유발함. 이를 방지하기 위해 UART Rx 입력단에 **2-stage Flip-Flop 동기화 회로(Synchronizer)**를 설계하여 외부 신호를 FPGA 클럭 도메인으로 안전하게 동기화함.
+* 현상: 기능 시뮬레이션에서는 완벽히 동작하던 코드가 실제 ARM 보드와 블루투스로 통신할 때 간헐적인 오작동(모터 제어 튐 현상) 발생.
+* 원인 및 해결: STM32와 FPGA가 서로 다른 독립적인 클럭 도메인을 사용함에 따라, 외부에서 비동기적으로 인가되는 UART 수신 신호가 FPGA 내부 플립플롭의 Setup/Hold 타임을 위반하여 Metastability(메타스테이블) 상태를 유발함. 이를 방지하기 위해 UART Rx 입력단에 **2-stage Flip-Flop 동기화 회로(Synchronizer)**를 설계하여 외부 신호를 FPGA 클럭 도메인으로 안전하게 동기화함.
+
 ② 시뮬레이션과 실제 하드웨어(Synthesis)의 동작 불일치 원인 규명
-현상: FSM이 실제 FPGA 하드웨어(ILA 관찰)에서는 조건이 충족되지 않은 상태에서 다음 State로 넘어가는 현상 발생.
-원인 및 해결: always @(*) 구문 내 불완전한 조건문(missing else)으로 인해 합성 툴이 의도치 않은 '래치(Latch)'를 생성함. 시뮬레이터는 Zero-time delay로 동작하여 문제를 숨겼으나, 실제 물리 회로에서는 래치로 인한 전파 지연과 글리치가 발생함. 모든 분기에 명확한 상태 지시(else)를 추가하여 래치 생성을 원천 차단.
+* 현상: FSM이 실제 FPGA 하드웨어(ILA 관찰)에서는 조건이 충족되지 않은 상태에서 다음 State로 넘어가는 현상 발생.
+* 원인 및 해결: always @(*) 구문 내 불완전한 조건문(missing else)으로 인해 합성 툴이 의도치 않은 '래치(Latch)'를 생성함. 시뮬레이터는 Zero-time delay로 동작하여 문제를 숨겼으나, 실제 물리 회로에서는 래치로 인한 전파 지연과 글리치가 발생함. 모든 분기에 명확한 상태 지시(else)를 추가하여 래치 생성을 원천 차단.
+
 ③ 레지스터 덮어쓰기(Overwrite) 설계 결함 수정
-원인 및 해결: 단일 Clock Cycle 내에서 동일한 레지스터(duty_cycle)에 대해 다중 Non-blocking 할당이 중첩되어 마지막 값이 덮어씌워지는 구조적 결함 파악. 할당 우선순위 구조를 단일화하여 1 Clock 당 1회의 업데이트만 발생하도록 RTL 아키텍처 재설계.
+* 원인 및 해결: 단일 Clock Cycle 내에서 동일한 레지스터(duty_cycle)에 대해 다중 Non-blocking 할당이 중첩되어 마지막 값이 덮어씌워지는 구조적 결함 파악. 할당 우선순위 구조를 단일화하여 1 Clock 당 1회의 업데이트만 발생하도록 RTL 아키텍처 재설계.
 
 3. ASIC Flow 및 타이밍 검증 (Timing Closure)
 Synthesis (Genus): 설계 제약 조건(SDC)을 바탕으로 Gate-level Netlist 추출 및 Pre-layout STA 진행.
